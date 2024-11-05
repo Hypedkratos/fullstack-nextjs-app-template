@@ -12,7 +12,7 @@ const Avatar = ({ img, size = "md" }: AvatarProps) => (
       myStyles[`app-avatar-${size}`]
     }`}
   >
-    <img src={img as string} alt="null-is-null-and-null" />
+    <img src={img as string} alt="null-is-null-and-null-but-null" />
   </div>
 );
 
