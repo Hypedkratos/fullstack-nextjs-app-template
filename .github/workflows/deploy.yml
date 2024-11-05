@@ -3,7 +3,7 @@ name: Deploy Next.js App
 on:
   push:
     branches:
-      - master  # or the branch you want to deploy from
+      - main  # or the branch you want to deploy from
 
 jobs:
   build:
@@ -11,12 +11,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3  # Update to v3
+        uses: actions/checkout@v3  # Keep using v3
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3  # Update to v3
+        uses: actions/setup-node@v3  # Keep using v3
         with:
-          node-version: '16'  # Specify Node.js version 16
+          node-version: '20'  # Specify Node.js version 20
 
       - name: Install dependencies
         run: npm install
