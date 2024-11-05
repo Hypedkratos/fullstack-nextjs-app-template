@@ -16,7 +16,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '16'  # Use the version that matches your Next.js setup
+          node-version: '18'  # Use the version that matches your Next.js setup
 
       - name: Install dependencies
         run: npm install
