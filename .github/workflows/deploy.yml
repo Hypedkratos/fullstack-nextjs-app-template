@@ -25,4 +25,4 @@ jobs:
         run: npm run build
 
       - name: Deploy
-        run: npm run deploy  # Adjust this line based on your deployment command
+        run: npm run deploy:prod  # Adjust this line based on your deployment command
