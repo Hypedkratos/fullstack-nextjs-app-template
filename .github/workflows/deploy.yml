@@ -1,50 +1,28 @@
-name: Deploy to EC2
+name: Deploy Next.js App
 
 on:
   push:
     branches:
-      - master  # Trigger deployment on push to main branch
+      - main  # or the branch you want to deploy from
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v3  # Update to v3
 
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3  # Update to v3
         with:
-          node-version: '18'  # Use the version that matches your Next.js setup
+          node-version: '16'  # Specify Node.js version 16
 
       - name: Install dependencies
         run: npm install
 
-      - name: Build Next.js application
+      - name: Build the app
         run: npm run build
 
-      - name: Deploy to EC2 via SSH
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script: |
-            # Navigate to your app's directory or clone it if it’s the first time
-            if [ ! -d "~/your-app" ]; then
-              git clone https://github.com/yourusername/your-repo-name.git ~/your-app
-            fi
-            cd ~/your-app
-
-            # Pull latest changes
-            git pull origin main
-
-            # Install dependencies and build the project
-            npm install
-            npm run build
-
-            # Start (or restart) the application with PM2
-            pm2 stop all || true
-            pm2 start npm --name "next-app" -- start
+      - name: Deploy
+        run: npm run deploy  # Adjust this line based on your deployment command
