@@ -41,8 +41,10 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
 
-          # Use SSH to deploy to EC2 (disable pseudo-terminal with -T flag and keep connection alive)
-          ssh -i private_key.pem -o ServerAliveInterval=60 -T $EC2_USER@$EC2_HOST <<EOF
+          # Use SSH to deploy to EC2
+          ssh -i private_key.pem -o ServerAliveInterval=60 -o StrictHostKeyChecking=no -T $EC2_USER@$EC2_HOST <<EOF
+            set -e  # Stop execution on any error
+
             # Navigate to your app directory or clone the repository if it’s the first deployment
             if [ ! -d "/home/$EC2_USER/fullstack-nextjs-app-template" ]; then
               git clone https://github.com/Hypedkratos/fullstack-nextjs-app-template.git /home/$EC2_USER/fullstack-nextjs-app-template
@@ -55,13 +57,13 @@ jobs:
             # Install dependencies
             npm install
 
-            # Build your Next.js app with nohup to prevent disconnects
-            nohup npm run build &
+            # Build your Next.js app
+            npm run build
 
             # Restart the app with PM2
             pm2 start ecosystem.config.js || pm2 restart ecosystem.config.js
             pm2 save
-          EOF
+EOF
 
           # Clean up by removing the private key after the deployment
           rm private_key.pem
