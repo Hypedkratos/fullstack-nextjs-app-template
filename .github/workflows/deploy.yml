@@ -27,11 +27,23 @@ jobs:
       - name: Build the app
         run: npm run build
 
-      - name: Deploy
+      - name: Deploy to EC2
         env:
-          DEPLOYMENT_PASSWORD: ${{ secrets.DEPLOYMENT_PASSWORD }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          EC2_USER: ${{ secrets.EC2_USER }} # Your EC2 user
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }} # Your EC2 private SSH key
+          EC2_HOST: ${{ secrets.EC2_HOST }} # Your EC2 host (IP address or hostname)
         run: |
-          echo "Deploying to AWS with the following credentials"
-          npm run deploy:prod
+          echo "$EC2_SSH_KEY" > private_key.pem  # Save the SSH key to a file
+          chmod 600 private_key.pem  # Ensure the key file has the correct permissions
+
+          # Use SSH to deploy to EC2
+          ssh -i private_key.pem $EC2_USER@$EC2_HOST <<EOF
+            cd /path/to/your/app
+            git pull origin master  # Pull the latest code if necessary
+            npm install  # Install dependencies
+            npm run build  # Build your Next.js app
+            pm2 restart ecosystem.config.js  # Restart the app with PM2 (or another command you use)
+          EOF
+
+          # Clean up by removing the private key after the deployment
+          rm private_key.pem
