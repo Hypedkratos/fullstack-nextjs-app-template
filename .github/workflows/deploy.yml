@@ -3,7 +3,7 @@ name: Deploy Next.js App
 on:
   push:
     branches:
-      - master  # or the branch you want to deploy from
+      - master # or the branch you want to deploy from
 
 jobs:
   build:
@@ -11,18 +11,21 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3  # Keep using v3
+        uses: actions/checkout@v3
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3  # Keep using v3
+        uses: actions/setup-node@v3
         with:
-          node-version: '20'  # Specify Node.js version 20
+          node-version: "20" # Specify Node.js version 20
 
       - name: Install dependencies
         run: npm install
+
+      - name: Install PM2
+        run: npm install -g pm2 # Install pm2 globally
 
       - name: Build the app
         run: npm run build
 
       - name: Deploy
-        run: npm run deploy:prod  # Adjust this line based on your deployment command
+        run: npm run deploy:prod
