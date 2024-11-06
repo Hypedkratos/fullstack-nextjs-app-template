@@ -16,34 +16,34 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "20" # Specify Node.js version 20
+          node-version: "20"
 
       - name: Install dependencies
         run: npm install
 
       - name: Install PM2
-        run: npm install -g pm2 # Install pm2 globally
+        run: npm install -g pm2
 
       - name: Build the app
         run: npm run build
 
       - name: Deploy to EC2
         env:
-          EC2_USER: ${{ secrets.EC2_USER }} # Your EC2 user
-          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }} # Your EC2 private SSH key
-          EC2_HOST: ${{ secrets.EC2_HOST }} # Your EC2 host (IP address or hostname)
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
           # Save the SSH key to a file
           echo "$EC2_SSH_KEY" > private_key.pem
-          chmod 600 private_key.pem  # Ensure the key has the correct permissions
+          chmod 600 private_key.pem
 
           # Add EC2 host to known hosts to prevent host verification error
           mkdir -p ~/.ssh
           ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
 
-          # Use SSH to deploy to EC2 with logging for each step
+          # Use SSH to deploy to EC2 with detailed logging
           ssh -i private_key.pem -o ServerAliveInterval=60 -o StrictHostKeyChecking=no -T $EC2_USER@$EC2_HOST <<EOF
-            set -e  # Stop execution on any error
+            set -e
 
             echo "Navigating to app directory or cloning the repository..."
             if [ ! -d "/home/$EC2_USER/fullstack-nextjs-app-template" ]; then
@@ -61,8 +61,13 @@ jobs:
             npm run build || { echo "Build failed"; exit 1; }
 
             echo "Restarting app with PM2..."
-            pm2 start ecosystem.config.js || pm2 restart ecosystem.config.js || { echo "PM2 restart failed"; exit 1; }
-            pm2 save || { echo "Failed to save PM2 state"; exit 1; }
+            if [ -f ecosystem.config.js ]; then
+              pm2 start ecosystem.config.js || pm2 restart ecosystem.config.js || { echo "PM2 restart failed"; exit 1; }
+              pm2 save || { echo "Failed to save PM2 state"; exit 1; }
+            else
+              echo "ecosystem.config.js file not found"
+              exit 1
+            fi
           EOF
 
           # Clean up by removing the private key after the deployment
