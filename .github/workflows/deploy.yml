@@ -41,28 +41,28 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
 
-          # Use SSH to deploy to EC2
+          # Use SSH to deploy to EC2 with logging for each step
           ssh -i private_key.pem -o ServerAliveInterval=60 -o StrictHostKeyChecking=no -T $EC2_USER@$EC2_HOST <<EOF
             set -e  # Stop execution on any error
 
-            # Navigate to your app directory or clone the repository if it’s the first deployment
+            echo "Navigating to app directory or cloning the repository..."
             if [ ! -d "/home/$EC2_USER/fullstack-nextjs-app-template" ]; then
-              git clone https://github.com/Hypedkratos/fullstack-nextjs-app-template.git /home/$EC2_USER/fullstack-nextjs-app-template
+              git clone https://github.com/Hypedkratos/fullstack-nextjs-app-template.git /home/$EC2_USER/fullstack-nextjs-app-template || { echo "Failed to clone repository"; exit 1; }
             fi
             cd /home/$EC2_USER/fullstack-nextjs-app-template
 
-            # Pull the latest code
-            git pull origin master
+            echo "Pulling the latest code..."
+            git pull origin master || { echo "Failed to pull latest code"; exit 1; }
 
-            # Install dependencies
-            npm install
+            echo "Installing dependencies..."
+            npm install || { echo "Failed to install dependencies"; exit 1; }
 
-            # Build your Next.js app
-            npm run build
+            echo "Building Next.js app..."
+            npm run build || { echo "Build failed"; exit 1; }
 
-            # Restart the app with PM2
-            pm2 start ecosystem.config.js || pm2 restart ecosystem.config.js
-            pm2 save
+            echo "Restarting app with PM2..."
+            pm2 start ecosystem.config.js || pm2 restart ecosystem.config.js || { echo "PM2 restart failed"; exit 1; }
+            pm2 save || { echo "Failed to save PM2 state"; exit 1; }
           EOF
 
           # Clean up by removing the private key after the deployment
