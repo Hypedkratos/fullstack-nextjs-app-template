@@ -43,11 +43,26 @@ jobs:
 
           # Use SSH to deploy to EC2 (disable pseudo-terminal with -T flag)
           ssh -i private_key.pem -T $EC2_USER@$EC2_HOST <<EOF
-            cd /path/to/your/app
-            git pull origin master  # Pull the latest code if necessary
-            npm install  # Install dependencies
-            npm run build  # Build your Next.js app
-            pm2 restart ecosystem.config.js  # Restart the app with PM2 (or another command you use)
+            # Update and install necessary packages
+            sudo apt update
+            sudo apt install -y nodejs npm git  # Install Node.js, npm, and Git if not already installed
+            sudo npm install -g pm2  # Install PM2 globally
+
+            # Clone the repository if not already present
+            if [ ! -d "/home/ubuntu/fullstack-nextjs-app-template" ]; then
+              git clone https://github.com/Hypedkratos/fullstack-nextjs-app-template.git /home/ubuntu/fullstack-nextjs-app-template
+            fi
+
+            # Navigate to the app directory
+            cd /home/ubuntu/fullstack-nextjs-app-template
+
+            # Pull the latest code if the repository already exists
+            git pull origin master
+
+            # Install dependencies, build the app, and restart with PM2
+            npm install
+            npm run build
+            pm2 restart ecosystem.config.js  # Restart the app with PM2 or specify the entry file
           EOF
 
           # Clean up by removing the private key after the deployment
