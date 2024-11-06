@@ -33,11 +33,16 @@ jobs:
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }} # Your EC2 private SSH key
           EC2_HOST: ${{ secrets.EC2_HOST }} # Your EC2 host (IP address or hostname)
         run: |
-          echo "$EC2_SSH_KEY" > private_key.pem  # Save the SSH key to a file
-          chmod 600 private_key.pem  # Ensure the key file has the correct permissions
+          # Save the SSH key to a file
+          echo "$EC2_SSH_KEY" > private_key.pem
+          chmod 600 private_key.pem  # Ensure the key has the correct permissions
 
-          # Use SSH to deploy to EC2
-          ssh -i private_key.pem $EC2_USER@$EC2_HOST <<EOF
+          # Add EC2 host to known hosts to prevent host verification error
+          mkdir -p ~/.ssh
+          ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
+
+          # Use SSH to deploy to EC2 (disable pseudo-terminal with -T flag)
+          ssh -i private_key.pem -T $EC2_USER@$EC2_HOST <<EOF
             cd /path/to/your/app
             git pull origin master  # Pull the latest code if necessary
             npm install  # Install dependencies
