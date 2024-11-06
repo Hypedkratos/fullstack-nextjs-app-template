@@ -41,29 +41,27 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
 
-          # Use SSH to deploy to EC2 (disable pseudo-terminal with -T flag)
-          ssh -i private_key.pem -T $EC2_USER@$EC2_HOST <<EOF
-            # Update and install necessary packages
-            sudo apt update
-            sudo apt install -y nodejs npm git  # Install Node.js, npm, and Git if not already installed
-            sudo npm install -g pm2  # Install PM2 globally
-
-            # Clone the repository if not already present
-            if [ ! -d "/home/ubuntu/fullstack-nextjs-app-template" ]; then
-              git clone https://github.com/Hypedkratos/fullstack-nextjs-app-template.git /home/ubuntu/fullstack-nextjs-app-template
+          # Use SSH to deploy to EC2 (disable pseudo-terminal with -T flag and keep connection alive)
+          ssh -i private_key.pem -o ServerAliveInterval=60 -T $EC2_USER@$EC2_HOST <<EOF
+            # Navigate to your app directory or clone the repository if it’s the first deployment
+            if [ ! -d "/home/$EC2_USER/fullstack-nextjs-app-template" ]; then
+              git clone https://github.com/Hypedkratos/fullstack-nextjs-app-template.git /home/$EC2_USER/fullstack-nextjs-app-template
             fi
+            cd /home/$EC2_USER/fullstack-nextjs-app-template
 
-            # Navigate to the app directory
-            cd /home/ubuntu/fullstack-nextjs-app-template
-
-            # Pull the latest code if the repository already exists
+            # Pull the latest code
             git pull origin master
 
-            # Install dependencies, build the app, and restart with PM2
+            # Install dependencies
             npm install
-            npm run build
-            pm2 restart ecosystem.config.js  # Restart the app with PM2 or specify the entry file
-          EOF
+
+            # Build your Next.js app with nohup to prevent disconnects
+            nohup npm run build &
+
+            # Restart the app with PM2
+            pm2 start ecosystem.config.js || pm2 restart ecosystem.config.js
+            pm2 save
+EOF
 
           # Clean up by removing the private key after the deployment
           rm private_key.pem
