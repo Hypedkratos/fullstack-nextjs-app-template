@@ -61,7 +61,7 @@ jobs:
             # Restart the app with PM2
             pm2 start ecosystem.config.js || pm2 restart ecosystem.config.js
             pm2 save
-EOF
+          EOF
 
           # Clean up by removing the private key after the deployment
           rm private_key.pem
